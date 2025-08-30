@@ -36,7 +36,7 @@ API completa em Go que implementa um sistema de reserva inteligente com bloqueio
 
 ```bash
 git clone <repository>
-cd airline-booking
+cd airline-booking-api
 
 # Copie e ajuste as variáveis de ambiente se necessário
 cp .env.example .env
