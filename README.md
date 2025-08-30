@@ -551,7 +551,6 @@ make help        # Lista todos os comandos
 - Sistema de hold com confirmação de ticket operacional
 - PNR gerado automaticamente para tickets confirmados
 - Elasticsearch indexando flights, holds e tickets
-- Documentação Swagger completamente removida
 
 ---
 
