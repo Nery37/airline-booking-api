@@ -1,0 +1,10 @@
+{
+  "origin": "SAO",
+  "destination": "LAX", 
+  "departure_time": "2025-09-01T14:30:00Z",
+  "arrival_time": "2025-09-01T22:30:00Z",
+  "airline": "LATAM",
+  "aircraft": "Airbus A320",
+  "fare_class": "Business",
+  "base_price": 1299.99
+}

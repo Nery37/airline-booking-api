@@ -1,0 +1,401 @@
+{
+	"info": {
+		"_postman_id": "airline-booking-api-collection",
+		"name": "Airline Booking API",
+		"description": "Complete collection for the Airline Booking API with flight creation, search, seat management, holds, and tickets",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "airline-booking-api"
+	},
+	"item": [
+		{
+			"name": "Health Check",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/health",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"health"
+					]
+				},
+				"description": "Check the health status of the API"
+			},
+			"response": []
+		},
+		{
+			"name": "Flights",
+			"item": [
+				{
+					"name": "Create Flight",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Response has flight data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData).to.have.property('origin');",
+									"    pm.expect(jsonData).to.have.property('destination');",
+									"    pm.expect(jsonData).to.have.property('airline');",
+									"    pm.expect(jsonData).to.have.property('aircraft');",
+									"    pm.expect(jsonData).to.have.property('fare_class');",
+									"    pm.expect(jsonData).to.have.property('base_price');",
+									"    pm.expect(jsonData).to.have.property('created_at');",
+									"});",
+									"",
+									"// Store flight ID for other requests",
+									"if (pm.response.code === 201) {",
+									"    var responseJson = pm.response.json();",
+									"    pm.environment.set(\"flight_id\", responseJson.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"origin\": \"SAO\",\n  \"destination\": \"LAX\",\n  \"departure_time\": \"2024-12-15T10:00:00Z\",\n  \"arrival_time\": \"2024-12-15T20:00:00Z\",\n  \"airline\": \"TAM\",\n  \"aircraft\": \"Boeing 737\",\n  \"fare_class\": \"economy\",\n  \"base_price\": 1500.00,\n  \"seat_config\": {\n    \"economy_rows\": 20,\n    \"business_rows\": 5,\n    \"first_class_rows\": 2,\n    \"seats_per_row\": 6\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/flights",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"flights"
+							]
+						},
+						"description": "Create a new flight and automatically index it in Elasticsearch"
+					},
+					"response": []
+				},
+				{
+					"name": "Search Flights",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has search results\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('flights');",
+									"    pm.expect(jsonData).to.have.property('total');",
+									"    pm.expect(jsonData).to.have.property('page');",
+									"    pm.expect(jsonData).to.have.property('size');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/flights/search?origin=SAO&destination=LAX&date=2024-12-15&fare_class=economy&page=1&size=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"flights",
+								"search"
+							],
+							"query": [
+								{
+									"key": "origin",
+									"value": "SAO"
+								},
+								{
+									"key": "destination",
+									"value": "LAX"
+								},
+								{
+									"key": "date",
+									"value": "2024-12-15"
+								},
+								{
+									"key": "fare_class",
+									"value": "economy"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Search for flights using various criteria"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Flight Seats",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is array of seats\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"    if (jsonData.length > 0) {",
+									"        pm.expect(jsonData[0]).to.have.property('seat_no');",
+									"        pm.expect(jsonData[0]).to.have.property('class');",
+									"        pm.expect(jsonData[0]).to.have.property('status');",
+									"        pm.expect(jsonData[0]).to.have.property('price');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/flights/{{flight_id}}/seats",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"flights",
+								"{{flight_id}}",
+								"seats"
+							]
+						},
+						"description": "Get seat availability for a specific flight"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Holds",
+			"item": [
+				{
+					"name": "Create Hold",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Response has hold data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('flight_id');",
+									"    pm.expect(jsonData).to.have.property('seat_no');",
+									"    pm.expect(jsonData).to.have.property('holder_id');",
+									"    pm.expect(jsonData).to.have.property('expires_at');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "User-ID",
+								"value": "{{user_id}}"
+							},
+							{
+								"key": "Idempotency-Key",
+								"value": "{{$guid}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"flight_id\": {{flight_id}},\n  \"seat_no\": \"12A\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/holds",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"holds"
+							]
+						},
+						"description": "Create a hold on a specific seat for 15 minutes"
+					},
+					"response": []
+				},
+				{
+					"name": "Release Hold",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 204\", function () {",
+									"    pm.response.to.have.status(204);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "User-ID",
+								"value": "{{user_id}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/holds/{{flight_id}}/12A",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"holds",
+								"{{flight_id}}",
+								"12A"
+							]
+						},
+						"description": "Release a hold on a specific seat"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Tickets",
+			"item": [
+				{
+					"name": "Confirm Ticket",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Response has ticket data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('ticket_id');",
+									"    pm.expect(jsonData).to.have.property('flight_id');",
+									"    pm.expect(jsonData).to.have.property('seat_no');",
+									"    pm.expect(jsonData).to.have.property('pnr_code');",
+									"    pm.expect(jsonData).to.have.property('payment_ref');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "User-ID",
+								"value": "{{user_id}}"
+							},
+							{
+								"key": "Idempotency-Key",
+								"value": "{{$guid}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"flight_id\": {{flight_id}},\n  \"seat_no\": \"12A\",\n  \"payment_ref\": \"payment_{{$timestamp}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/tickets/confirm",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tickets",
+								"confirm"
+							]
+						},
+						"description": "Confirm a held seat and create a ticket"
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080/api/v1",
+			"type": "string"
+		},
+		{
+			"key": "flight_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "user_id",
+			"value": "user123",
+			"type": "string"
+		}
+	]
+}

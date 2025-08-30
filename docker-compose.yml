@@ -1,0 +1,91 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: airline_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: airline_booking
+      MYSQL_USER: airline_user
+      MYSQL_PASSWORD: airline_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./scripts/mysql_init.sql:/docker-entrypoint-initdb.d/init.sql
+    command: --default-authentication-plugin=mysql_native_password
+    networks:
+      - airline_network
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: airline_elasticsearch
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    networks:
+      - airline_network
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: airline_kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    networks:
+      - airline_network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:5.2
+    container_name: airline_phpmyadmin
+    environment:
+      - PMA_HOST=mysql
+      - PMA_PORT=3306
+      - PMA_USER=root
+      - PMA_PASSWORD=rootpass
+      - MYSQL_ROOT_PASSWORD=rootpass
+    ports:
+      - "8081:80"
+    depends_on:
+      - mysql
+    networks:
+      - airline_network
+
+  app:
+    build: .
+    container_name: airline_app
+    environment:
+      - APP_ENV=development
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USER=airline_user
+      - DB_PASSWORD=airline_pass
+      - DB_NAME=airline_booking
+      - ES_ADDRESSES=http://elasticsearch:9200
+      - HOLD_TTL_MINUTES=15
+      - RATE_LIMIT_PER_MINUTE=60
+      - LOG_LEVEL=info
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql
+      - elasticsearch
+    networks:
+      - airline_network
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+  es_data:
+
+networks:
+  airline_network:
+    driver: bridge

@@ -1,0 +1,16 @@
+{
+  "origin": "BOS",
+  "destination": "SFO", 
+  "departure_time": "2025-08-31T08:00:00Z",
+  "arrival_time": "2025-08-31T14:30:00Z",
+  "airline": "UA",
+  "aircraft": "Boeing 737",
+  "fare_class": "economy",
+  "base_price": 399.99,
+  "seat_config": {
+    "economy_rows": 25,
+    "business_rows": 3,
+    "first_class_rows": 1,
+    "seats_per_row": 6
+  }
+}

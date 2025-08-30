@@ -1,0 +1,10 @@
+{
+  "origin": "NYC",
+  "destination": "LAX",
+  "departure_time": "2025-08-31T10:00:00Z",
+  "arrival_time": "2025-08-31T16:00:00Z",
+  "airline": "UA",
+  "aircraft": "Boeing 777",
+  "fare_class": "economy",
+  "base_price": 399.99
+}

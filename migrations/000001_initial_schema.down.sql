@@ -1,0 +1,5 @@
+DROP TABLE IF EXISTS idempotency_keys;
+DROP TABLE IF EXISTS tickets;
+DROP TABLE IF EXISTS seat_locks;
+DROP TABLE IF EXISTS seats;
+DROP TABLE IF EXISTS flights;
