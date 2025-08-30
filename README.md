@@ -165,8 +165,6 @@ make seed
 # Método 3: Usar arquivo SQL direto  
 make seed-sql
 
-# Método 4: Reset completo dos dados
-make reset
 ```
 
 ## 🧪 Exemplos de Uso com Dados Reais
