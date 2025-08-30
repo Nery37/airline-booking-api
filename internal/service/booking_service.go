@@ -314,9 +314,53 @@ func (s *BookingService) SearchFlights(ctx context.Context, req models.FlightSea
 	return esResponse, nil
 }
 
-// CleanupExpiredHolds removes expired holds
+// CleanupExpiredHolds removes expired holds from both database and Elasticsearch
 func (s *BookingService) CleanupExpiredHolds(ctx context.Context) error {
-	return s.seatRepo.CleanupExpiredHolds(ctx)
+	// Get expired holds before deleting them
+	query := `SELECT id, flight_id, seat_no, holder_id, expires_at, created_at, updated_at 
+	          FROM seat_locks WHERE expires_at < NOW()`
+	
+	rows, err := s.db.DB.QueryContext(ctx, query)
+	if err != nil {
+		s.logger.Error("Failed to get expired holds", zap.Error(err))
+		return s.seatRepo.CleanupExpiredHolds(ctx) // Fallback to just database cleanup
+	}
+	defer rows.Close()
+
+	var expiredHoldIDs []int64
+	for rows.Next() {
+		var id, flightID int64
+		var seatNo, holderID string
+		var expiresAt sql.NullTime
+		var createdAt, updatedAt time.Time
+		
+		if err := rows.Scan(&id, &flightID, &seatNo, &holderID, &expiresAt, &createdAt, &updatedAt); err != nil {
+			s.logger.Error("Failed to scan expired hold", zap.Error(err))
+			continue
+		}
+		expiredHoldIDs = append(expiredHoldIDs, id)
+	}
+
+	// Clean up from database first
+	err = s.seatRepo.CleanupExpiredHolds(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Clean up from Elasticsearch
+	for _, holdID := range expiredHoldIDs {
+		err := s.esClient.DeleteHold(ctx, holdID)
+		if err != nil {
+			s.logger.Error("Failed to delete hold from Elasticsearch", 
+				zap.Error(err), 
+				zap.Int64("hold_id", holdID))
+			// Log error but don't fail the entire cleanup
+		} else {
+			s.logger.Debug("Hold deleted from Elasticsearch", zap.Int64("hold_id", holdID))
+		}
+	}
+
+	return nil
 }
 
 // Helper methods for idempotency
