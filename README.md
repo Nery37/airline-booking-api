@@ -1,7 +1,6 @@
-# Airline Booking API - Smart Seat Reservation System### 3. Execute Migrations e Seeds
+# Airline Booking API - Sistema de Reserva de Assentos (Passagens Aéreas)
 
 API completa em Go que implementa um sistema de reserva inteligente com bloqueio de assento para agência de passagens aéreas, usando MySQL (transacional) e Elasticsearch (busca/consulta).
-
 
 ## 🎯 Características Principais
 
@@ -552,7 +551,6 @@ make help        # Lista todos os comandos
 - Sistema de hold com confirmação de ticket operacional
 - PNR gerado automaticamente para tickets confirmados
 - Elasticsearch indexando flights, holds e tickets
-- Documentação Swagger completamente removida
 
 ---
 
